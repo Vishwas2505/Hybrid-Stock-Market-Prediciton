@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hybrid Information Mixing Module - Stock Prediction</title>
+    
+    <!-- Premium Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js (CDN for interactive charts) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-theme">
+    <div class="glass-bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+    
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-logo">
+                    <i class="fa-solid fa-chart-line-up font-gradient"></i>
+                </div>
+                <div class="brand-name">
+                    <span class="logo-text-top">HIMM System</span>
+                    <span class="logo-text-sub">Stock Predictor</span>
+                </div>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-tab="dashboard">
+                    <i class="fa-solid fa-gauge"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="research">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                    <span>Model Comparison</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="settings">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>System Settings</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="pulse-dot green"></span>
+                    <span class="status-text">Server Connected</span>
+                </div>
+                <div class="project-info">
+                    <span>CVR College of Engineering</span>
+                    <span>B.Tech CSE Mini Project</span>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="app-header">
+                <div class="header-left">
+                    <h1 id="page-title">Predictive Dashboard</h1>
+                    <p class="subtitle">Extracting temporal and semantic features for market forecasting</p>
+                </div>
+                <div class="header-right">
+                    <button class="settings-btn glass-btn" id="open-api-modal">
+                        <i class="fa-solid fa-key text-gold"></i>
+                        <span>API Keys</span>
+                    </button>
+                    <div class="date-display" id="current-date">June 3, 2026</div>
+                </div>
+            </header>
+            
+            <!-- Dashboard Tab -->
+            <section class="tab-content active" id="tab-dashboard">
+                <!-- Stock Picker & Configuration Card -->
+                <div class="config-grid">
+                    <!-- Left: Picker and model select -->
+                    <div class="glass-card controller-card">
+                        <h3 class="card-title"><i class="fa-solid fa-gear text-blue"></i> Parameters</h3>
+                        <div class="input-group">
+                            <label for="stock-select">Stock Ticker</label>
+                            <div class="ticker-input-wrapper">
+                                <select id="stock-select" class="glass-input">
+                                    <option value="AAPL">AAPL (Apple Inc.)</option>
+                                    <option value="GOOGL">GOOGL (Alphabet Inc.)</option>
+                                    <option value="MSFT">MSFT (Microsoft Corp.)</option>
+                                    <option value="TSLA">TSLA (Tesla Motors)</option>
+                                    <option value="NVDA">NVDA (NVIDIA Corp.)</option>
+                                    <option value="AMZN">AMZN (Amazon.com Inc.)</option>
+                                    <option value="META">META (Meta Platforms)</option>
+                                    <option value="CUSTOM">-- Custom Ticker --</option>
+                                </select>
+                                <input type="text" id="custom-ticker-input" class="glass-input hidden" placeholder="Enter Ticker (e.g. NFLX)">
+                            </div>
+                        </div>
+                        
+                        <div class="params-row">
+                            <div class="input-group half">
+                                <label for="param-window">Window (Days)</label>
+                                <input type="number" id="param-window" class="glass-input" value="30" min="5" max="90">
+                            </div>
+                            <div class="input-group half">
+                                <label for="param-model">Classifier Model</label>
+                                <select id="param-model" class="glass-input">
+                                    <option value="himm">HIMM (Ours)</option>
+                                    <option value="lstm">LSTM Baseline</option>
+                                    <option value="gru">GRU Baseline</option>
+                                    <option value="transformer">Transformer</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="collapsible-params">
+                            <div class="params-header" id="toggle-advanced-params">
+                                <span>Advanced Neural Config</span>
+                                <i class="fa-solid fa-chevron-down"></i>
+                            </div>
+                            <div class="params-body hidden" id="advanced-params-panel">
+                                <div class="params-row">
+                                    <div class="input-group half">
+                                        <label>GRU Layers</label>
+                                        <input type="number" class="glass-input" value="4" disabled>
+                                    </div>
+                                    <div class="input-group half">
+                                        <label>MLP Hidden Dim</label>
+                                        <input type="number" class="glass-input" value="768" disabled>
+                                    </div>
+                                </div>
+                                <div class="params-row">
+                                    <div class="input-group half">
+                                        <label>MLP Mixer Layers</label>
+                                        <input type="number" class="glass-input" value="8" disabled>
+                                    </div>
+                                    <div class="input-group half">
+                                        <label>Learning Rate</label>
+                                        <input type="text" class="glass-input" value="2e-5" disabled>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button class="predict-btn" id="run-prediction">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Predict Stock Movement</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Right: Prediction Results View -->
+                    <div class="glass-card prediction-result-card" id="result-card">
+                        <div class="empty-state-result" id="result-empty">
+                            <i class="fa-solid fa-chart-line-up-down placeholder-icon"></i>
+                            <p>Configure stock parameters and click <strong>Predict</strong> to execute the HIMM deep learning pipeline.</p>
+                        </div>
+                        
+                        <div class="result-display-content hidden" id="result-success">
+                            <div class="result-badge-container">
+                                <span class="result-badge" id="direction-badge">UP</span>
+                                <span class="result-probability" id="probability-text">78.4% Confidence</span>
+                            </div>
+                            
+                            <div class="result-metrics">
+                                <div class="metric-item">
+                                    <span class="metric-label">Ticker</span>
+                                    <span class="metric-val" id="res-ticker">AAPL</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Sentiment Impact</span>
+                                    <span class="metric-val" id="res-sentiment">Bullish (+0.45)</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">ML Model Type</span>
+                                    <span class="metric-val" id="res-model">HIMM</span>
+                                </div>
+                            </div>
+                            
+                            <div class="ai-outlook">
+                                <h4><i class="fa-solid fa-brain text-purple"></i> Market Insights & Sentiment Driver:</h4>
+                                <p id="ai-outlook-text">AAPL shows bullish alignment. Positive reports of AI updates surpass macro inflation pressures, and GRU price embedder reports high density volume support above 175.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Main Dashboard Plots / Charts Grid -->
+                <div class="charts-grid">
+                    <!-- Historical Prices Plot -->
+                    <div class="glass-card chart-card" style="height: auto; min-height: 420px;">
+                        <div class="chart-header">
+                            <h3 class="card-title"><i class="fa-solid fa-chart-line text-green"></i> Interactive Candlestick Chart</h3>
+                            <div class="chart-ctrl-row">
+                                <span class="chart-subtitle" id="chart-ticker-name">AAPL Historical</span>
+                                <div class="chart-toggle-group">
+                                    <button class="chart-toggle-btn active" id="toggle-candle">Candles</button>
+                                    <button class="chart-toggle-btn" id="toggle-line">Line</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chart-card-content">
+                            <div class="chart-main-area">
+                                <canvas id="stockChart" class="custom-candlestick-canvas"></canvas>
+                            </div>
+                            <div class="trading-side-panel">
+                                <div>
+                                    <div class="trade-panel-title">
+                                        <i class="fa-solid fa-wallet text-blue"></i> Mock Trading
+                                    </div>
+                                    <div class="portfolio-metrics">
+                                        <div class="portfolio-stat">
+                                            <span>Cash Available</span>
+                                            <span id="port-cash">$10,000.00</span>
+                                        </div>
+                                        <div class="portfolio-stat">
+                                            <span>Shares Owned</span>
+                                            <span id="port-shares">0</span>
+                                        </div>
+                                        <div class="portfolio-stat">
+                                            <span>Total Value</span>
+                                            <span id="port-total">$10,000.00</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="trading-form">
+                                    <div class="trade-qty-selector">
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <label>Order Qty</label>
+                                            <span class="trade-qty-val" id="trade-qty-display">10</span>
+                                        </div>
+                                        <div class="trade-qty-slider-row">
+                                            <input type="range" id="trade-qty" min="1" max="100" value="10">
+                                        </div>
+                                    </div>
+                                    <div class="trade-actions">
+                                        <button class="btn-trade buy" id="action-buy">
+                                            <i class="fa-solid fa-circle-arrow-up"></i> BUY
+                                        </button>
+                                        <button class="btn-trade sell" id="action-sell">
+                                            <i class="fa-solid fa-circle-arrow-down"></i> SELL
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Live Inference Console Logs -->
+                    <div class="glass-card terminal-card" style="height: auto; min-height: 420px;">
+                        <div class="terminal-header">
+                            <div class="terminal-title">
+                                <i class="fa-solid fa-terminal text-green"></i> HIMM Inference Logs Console
+                            </div>
+                            <div class="terminal-dots">
+                                <span class="dot red"></span>
+                                <span class="dot yellow"></span>
+                                <span class="dot green"></span>
+                            </div>
+                        </div>
+                        <div class="terminal-body" id="terminal-console">
+                            <div class="console-line system-msg">[SYSTEM] Ready for inference. Server listening on Port 8000.</div>
+                            <div class="console-line system-msg">[SYSTEM] GPU detected: NVIDIA GeForce RTX 3090 (PyTorch CUDA Active).</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Neural Network Modules Explorer -->
+                <div class="glass-card modules-explorer-card">
+                    <div class="explorer-header-row">
+                        <h3 class="explorer-title">
+                            <i class="fa-solid fa-cubes-stacked text-purple"></i> Interactive Neural Modules Explorer
+                        </h3>
+                        <div class="explorer-tabs">
+                            <button class="explorer-tab-btn active" data-module-tab="gru">
+                                <i class="fa-solid fa-chart-simple"></i> GRU Price Embedder
+                            </button>
+                            <button class="explorer-tab-btn" data-module-tab="bert">
+                                <i class="fa-solid fa-newspaper"></i> BERT Sentiment Embedder
+                            </button>
+                            <button class="explorer-tab-btn" data-module-tab="fusion">
+                                <i class="fa-solid fa-shuffle"></i> HIMM Fusion & Mixing
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="explorer-body-content">
+                        <!-- GRU Panel -->
+                        <div class="module-panel active" id="module-panel-gru">
+                            <div class="module-info-banner">
+                                <i class="fa-solid fa-circle-info text-blue"></i>
+                                <span>The <strong>GRU (Gated Recurrent Unit)</strong> price embedding module captures temporal trends, volume support, and short-term volatility signatures across the lookback window. It maps the OHLCV matrix to a dense 768-dimensional temporal representation vector ($g_t$).</span>
+                            </div>
+                            
+                            <div class="module-details-grid">
+                                <div class="vector-visualizer">
+                                    <div class="vector-visualizer-header">
+                                        <span class="vector-visualizer-title">GRU Embedding Activations ($g_t \in \mathbb{R}^{768}$)</span>
+                                        <span class="vector-active-dimensions" id="gru-dims">Dim: [0 - 127 shown]</span>
+                                    </div>
+                                    <div class="vector-grid" id="gru-vector-grid">
+                                        <!-- Vector nodes filled dynamically by js -->
+                                    </div>
+                                </div>
+                                <div class="detail-subcard">
+                                    <span class="detail-subcard-title"><i class="fa-solid fa-microchip text-green"></i> GRU Hidden States</span>
+                                    <div class="neural-network-flow" style="margin-bottom: 1rem;">
+                                        <span class="flow-node active">Input Window</span>
+                                        <span class="flow-arrow"><i class="fa-solid fa-right-long"></i></span>
+                                        <span class="flow-node">GRU Stack (4x768)</span>
+                                        <span class="flow-arrow"><i class="fa-solid fa-right-long"></i></span>
+                                        <span class="flow-node">Last Hidden Vector ($g_t$)</span>
+                                    </div>
+                                    <div class="portfolio-metrics" style="margin-bottom: 0;">
+                                        <div class="portfolio-stat">
+                                            <span>Sequence Length</span>
+                                            <span id="gru-seq-len">30 Days</span>
+                                        </div>
+                                        <div class="portfolio-stat">
+                                            <span>Temporal Trend State</span>
+                                            <span id="gru-trend-state" class="text-green">BULLISH MOMENTUM</span>
+                                        </div>
+                                        <div class="portfolio-stat">
+                                            <span>Volume Support Signature</span>
+                                            <span id="gru-vol-sig" class="text-blue">STRONG SUPPORT</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- BERT Panel -->
+                        <div class="module-panel" id="module-panel-bert">
+                            <div class="module-info-banner">
+                                <i class="fa-solid fa-circle-info text-gold"></i>
+                                <span>The <strong>BERT / LLM Semantic Embedder</strong> parses the natural language stream of active headlines, assessing emotional bias and news importance to generate a dense semantic state vector ($s_t \in \mathbb{R}^{768}$).</span>
+                            </div>
+                            
+                            <div class="module-details-grid">
+                                <div class="vector-visualizer">
+                                    <div class="vector-visualizer-header">
+                                        <span class="vector-visualizer-title">BERT Embedding Activations ($s_t \in \mathbb{R}^{768}$)</span>
+                                        <span class="vector-active-dimensions" id="bert-dims">Dim: [0 - 127 shown]</span>
+                                    </div>
+                                    <div class="vector-grid" id="bert-vector-grid">
+                                        <!-- Vector nodes filled dynamically by js -->
+                                    </div>
+                                </div>
+                                <div class="detail-subcard">
+                                    <span class="detail-subcard-title"><i class="fa-solid fa-scale-balanced text-gold"></i> Sentiment Analysis metrics</span>
+                                    <div class="sentiment-gauge-wrapper">
+                                        <div class="sentiment-gauge-meter">
+                                            <div class="sentiment-gauge-fill" id="sent-gauge-fill"></div>
+                                            <div class="sentiment-gauge-indicator" id="sent-gauge-indicator"></div>
+                                        </div>
+                                        <div class="sentiment-gauge-label">
+                                            <span>EXTREME BEARISH</span>
+                                            <span>NEUTRAL</span>
+                                            <span>EXTREME BULLISH</span>
+                                        </div>
+                                        <div class="sentiment-gauge-score-readout text-green" id="sent-score-readout">
+                                            Bullish (+0.45)
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Fusion Panel -->
+                        <div class="module-panel" id="module-panel-fusion">
+                            <div class="module-info-banner">
+                                <i class="fa-solid fa-circle-info text-purple"></i>
+                                <span>The <strong>Hybrid Information Mixing Module (HIMM)</strong> mixes tokens across spatial rows and embedding channels. By stacking the temporal embedding $g_t$ and semantic embedding $s_t$, HIMM mixes features iteratively via Feature-Mixing and Interaction-Mixing MLPs.</span>
+                            </div>
+                            
+                            <div class="fusion-vis-wrapper">
+                                <div class="fusion-row">
+                                    <div class="fusion-vector-bar gru-color">g_t (Temporal Embed)</div>
+                                    <div class="fusion-operator">+</div>
+                                    <div class="fusion-vector-bar bert-color">s_t (Semantic Embed)</div>
+                                </div>
+                                <div class="fusion-row"><i class="fa-solid fa-arrow-down-long fusion-operator"></i></div>
+                                <div class="fusion-row">
+                                    <div class="fusion-vector-bar mixed-color" id="fusion-tensor-display">Stacked Mixed Tensor x_t [2 x 768]</div>
+                                </div>
+                            </div>
+                            
+                            <div class="mixing-mlps-container">
+                                <div class="mlp-interactive-box" id="mlp-feature-box">
+                                    <span class="mlp-box-title">Feature-Mixing MLP (Row Mixers)</span>
+                                    <div class="mlp-activity-trail">
+                                        <span class="mlp-dot"></span>
+                                        <span class="mlp-dot"></span>
+                                        <span class="mlp-dot"></span>
+                                        <span class="mlp-dot"></span>
+                                        <span class="mlp-dot"></span>
+                                        <span class="mlp-dot"></span>
+                                    </div>
+                                    <p style="font-size: 0.65rem; color: var(--text-secondary); margin-top: 0.25rem;">Mixes features across the temporal and semantic channel tokens</p>
+                                </div>
+                                <div class="mlp-interactive-box" id="mlp-interaction-box">
+                                    <span class="mlp-box-title">Interaction-Mixing MLP (Channel Mixers)</span>
+                                    <div class="mlp-activity-trail">
+                                        <span class="mlp-dot"></span>
+                                        <span class="mlp-dot"></span>
+                                        <span class="mlp-dot"></span>
+                                        <span class="mlp-dot"></span>
+                                        <span class="mlp-dot"></span>
+                                        <span class="mlp-dot"></span>
+                                    </div>
+                                    <p style="font-size: 0.65rem; color: var(--text-secondary); margin-top: 0.25rem;">Mixes embedding dimensions within each feature channel</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <!-- News Sentiment Feed -->
+                <div class="glass-card news-card">
+                    <h3 class="card-title"><i class="fa-solid fa-newspaper text-gold"></i> Contextual News Stream (Sentiment Analyzed)</h3>
+                    <div class="news-list" id="news-container">
+                        <!-- Placed dynamically -->
+                        <div class="empty-news">No active stock query. Select a stock to load matching headlines.</div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Research/Model Comparison Tab -->
+            <section class="tab-content" id="tab-research">
+                <div class="research-grid">
+                    <!-- Project Overview Card -->
+                    <div class="glass-card full-width">
+                        <h2 class="section-heading font-gradient-color">HYBRID INFORMATION MIXING MODULE</h2>
+                        <p class="research-text-p">
+                            The HIMM architecture uses a two-stage feature learning approach. In the first stage, time-series features are extracted from stock prices using a <strong>Gated Recurrent Unit (GRU)</strong>, while semantic features are extracted from text using <strong>BERT/Generative AI</strong>. In the second stage, both features are combined into a fixed-dimensional mixed feature tensor and processed through dual multilayer perceptrons (MLPs): the <strong>Feature-Mixing MLP</strong> (token-mixing) and the <strong>Interaction-Mixing MLP</strong> (channel-mixing).
+                        </p>
+                    </div>
+                    
+                    <!-- Architecture Visualizer -->
+                    <div class="glass-card graphic-card">
+                        <h3 class="card-title"><i class="fa-solid fa-sitemap text-blue"></i> Conceptual Flow</h3>
+                        
+                        <div class="arch-diagram">
+                            <div class="arch-block input-block">
+                                <span class="block-title">Raw Data Input</span>
+                                <div class="sub-blocks">
+                                    <span class="tag price-tag">OHLCV Price Data</span>
+                                    <span class="tag text-tag">News Headlines / Tweets</span>
+                                </div>
+                            </div>
+                            <div class="arch-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+                            <div class="arch-block embed-block">
+                                <span class="block-title">Feature Embedding Layer</span>
+                                <div class="sub-blocks">
+                                    <span class="tag price-tag">GRU Encoder (gt ∈ ℝ^768)</span>
+                                    <span class="tag text-tag">BERT / LLM Encoder (st ∈ ℝ^768)</span>
+                                </div>
+                            </div>
+                            <div class="arch-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+                            <div class="arch-block concat-block">
+                                <span class="block-title">Mixed Feature Tensor Construction</span>
+                                <span class="tag mixed-tag">x_t = CONCAT(g_t, s_t) ∈ ℝ^(2 x 768)</span>
+                            </div>
+                            <div class="arch-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+                            <div class="arch-block mixer-block">
+                                <span class="block-title">MLP Mixing Blocks (8 Layers)</span>
+                                <div class="sub-blocks">
+                                    <span class="tag mlp-tag">Feature-Mixing MLP (Row)</span>
+                                    <span class="tag mlp-tag">Interaction-Mixing MLP (Col)</span>
+                                </div>
+                            </div>
+                            <div class="arch-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+                            <div class="arch-block classifier-block">
+                                <span class="block-title">Binary Classifier</span>
+                                <span class="tag final-tag">LayerNorm → GAP → FC Output → Sigmoid → (Up / Down)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Research Metrics Tables -->
+                    <div class="glass-card tables-card">
+                        <h3 class="card-title"><i class="fa-solid fa-chart-simple text-purple"></i> Research Paper Evaluation Results</h3>
+                        
+                        <div class="table-tab-container">
+                            <h4 class="table-subtitle">Comparison of Information Mixing Methods (StockNet Dataset)</h4>
+                            <div class="table-wrapper">
+                                <table class="research-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Model</th>
+                                            <th>Accuracy (%)</th>
+                                            <th>Precision (%)</th>
+                                            <th>Recall (%)</th>
+                                            <th>F1 Score (%)</th>
+                                            <th>MCC</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>LSTM</td>
+                                            <td>53.53%</td>
+                                            <td>53.29%</td>
+                                            <td>93.49%</td>
+                                            <td>67.89%</td>
+                                            <td>0.08</td>
+                                        </tr>
+                                        <tr>
+                                            <td>GRU</td>
+                                            <td>53.02%</td>
+                                            <td>52.80%</td>
+                                            <td>86.78%</td>
+                                            <td>65.66%</td>
+                                            <td>0.05</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Transformer</td>
+                                            <td>51.61%</td>
+                                            <td>51.56%</td>
+                                            <td>98.96%</td>
+                                            <td>67.79%</td>
+                                            <td>0.01</td>
+                                        </tr>
+                                        <tr class="highlight-row">
+                                            <td>HIMM (Ours)</td>
+                                            <td>69.20%</td>
+                                            <td>63.49%</td>
+                                            <td>95.19%</td>
+                                            <td>76.17%</td>
+                                            <td>0.43</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="table-tab-container">
+                            <h4 class="table-subtitle">Ablation Study: Price Embedding Comparison</h4>
+                            <div class="table-wrapper">
+                                <table class="research-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Model (HIMM Core)</th>
+                                            <th>Accuracy (%)</th>
+                                            <th>F1 Score (%)</th>
+                                            <th>MCC</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>LSTM Price Embedder</td>
+                                            <td>68.53%</td>
+                                            <td>75.73%</td>
+                                            <td>0.41</td>
+                                        </tr>
+                                        <tr class="highlight-row">
+                                            <td>GRU Price Embedder</td>
+                                            <td>69.20%</td>
+                                            <td>76.17%</td>
+                                            <td>0.43</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Settings Tab -->
+            <section class="tab-content" id="tab-settings">
+                <div class="glass-card settings-panel-card">
+                    <h3 class="card-title"><i class="fa-solid fa-sliders text-blue"></i> Configurable Keys & Integrations</h3>
+                    <p class="settings-desc">Manage API integrations to enable high-quality semantic feature extraction (replacing local lexical fallbacks).</p>
+                    
+                    <div class="settings-input-group">
+                        <label for="settings-gemini-key">
+                            <span>Gemini API Key</span>
+                            <span class="tooltip" title="Required for semantic sentiment analysis of financial headlines."><i class="fa-solid fa-circle-question"></i></span>
+                        </label>
+                        <div class="input-with-button">
+                            <input type="password" id="settings-gemini-key" class="glass-input" placeholder="AIzaSy...">
+                            <button class="save-key-btn" id="save-gemini-key">Save Key</button>
+                        </div>
+                        <p class="input-help">Keys are securely stored in your local browser storage and never sent anywhere except directly to Google API endpoints.</p>
+                    </div>
+                    
+                    <div class="divider"></div>
+                    
+                    <h4 class="settings-subtitle">System Status</h4>
+                    <div class="status-grid">
+                        <div class="status-box">
+                            <span class="status-box-label">Python Environment</span>
+                            <span class="status-box-val text-green" id="status-python">Detecting...</span>
+                        </div>
+                        <div class="status-box">
+                            <span class="status-box-label">PyTorch Support</span>
+                            <span class="status-box-val" id="status-pytorch">Detecting...</span>
+                        </div>
+                        <div class="status-box">
+                            <span class="status-box-label">Yahoo Finance API</span>
+                            <span class="status-box-val text-green">Online</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <!-- API Settings Overlay Modal -->
+    <div class="modal-overlay" id="api-modal">
+        <div class="modal-container glass-card">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-key text-gold"></i> API Credentials Settings</h3>
+                <button class="close-modal-btn" id="close-api-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-input-group">
+                    <label for="modal-gemini-key">Gemini API Key</label>
+                    <input type="password" id="modal-gemini-key" class="glass-input" placeholder="Paste Gemini API Key here...">
+                    <p class="input-help">Enables Gemini 1.5 Flash news sentiment evaluation and prediction explanation. Fallback local analytics will execute if left empty.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="glass-btn" id="cancel-modal-btn">Cancel</button>
+                <button class="save-key-btn" id="save-modal-btn">Apply Credentials</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Dynamic scripts -->
+    <script src="script.js"></script>
+</body>
+</html>
