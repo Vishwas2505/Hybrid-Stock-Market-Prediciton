@@ -242,7 +242,6 @@ if run_pred:
         try:
             res = run_prediction_pipeline(ticker, window_size, model_type, gemini_key, custom_sentiment)
             st.session_state.predict_data = res
-            st.session_state.ticker_prices = res["prices"]
             st.session_state.ticker_news = res["news"]
             st.success("Inference Complete!")
         except Exception as e:
