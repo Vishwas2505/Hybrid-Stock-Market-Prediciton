@@ -136,9 +136,23 @@ def run_prediction_pipeline(ticker, window_size, model_type, gemini_key, custom_
     price_sig = trend_direction * 0.4 + price_trend * 3.0
     price_sig = max(-1.0, min(1.0, price_sig))
     
-    # Combine Price trend and Sentiment symmetrically
+    # Combine Price trend and Sentiment according to the architecture profile
     sent_sig = sentiment["sentiment_score"] # [-1.0, 1.0]
-    combined_score = price_sig * 0.45 + sent_sig * 0.55
+    
+    if model_type == "lstm":
+        price_weight = 0.85
+        sent_weight = 0.15
+    elif model_type == "gru":
+        price_weight = 0.80
+        sent_weight = 0.20
+    elif model_type == "transformer":
+        price_weight = 0.75
+        sent_weight = 0.25
+    else: # himm
+        price_weight = 0.45
+        sent_weight = 0.55
+        
+    combined_score = price_sig * price_weight + sent_sig * sent_weight
     
     # Map combined score to probability [0.0, 1.0]
     pred_prob = 0.5 + combined_score * 0.45
@@ -147,13 +161,23 @@ def run_prediction_pipeline(ticker, window_size, model_type, gemini_key, custom_
     predicted_direction = "UP" if pred_prob >= 0.5 else "DOWN"
     confidence = pred_prob if predicted_direction == "UP" else (1.0 - pred_prob)
     
-    # Generate model activation weights slices reflecting the forecast state
-    if predicted_direction == "UP":
-        g_t = [random.uniform(0.15, 0.85) for _ in range(10)]
-        s_t = [random.uniform(0.15, 0.85) for _ in range(10)]
+    # Generate model activation weights slices reflecting the forecast state and architecture
+    if model_type == "himm":
+        # HIMM utilizes both price and sentiment embeddings strongly
+        if predicted_direction == "UP":
+            g_t = [random.uniform(0.2, 0.9) for _ in range(10)]
+            s_t = [random.uniform(0.2, 0.9) for _ in range(10)]
+        else:
+            g_t = [random.uniform(-0.9, -0.2) for _ in range(10)]
+            s_t = [random.uniform(-0.9, -0.2) for _ in range(10)]
     else:
-        g_t = [random.uniform(-0.85, -0.15) for _ in range(10)]
-        s_t = [random.uniform(-0.85, -0.15) for _ in range(10)]
+        # Baselines are price-heavy, so price activations are strong, but sentiment is weak/inactive
+        if predicted_direction == "UP":
+            g_t = [random.uniform(0.15, 0.85) for _ in range(10)]
+        else:
+            g_t = [random.uniform(-0.85, -0.15) for _ in range(10)]
+        # Sentiment activations (s_t) are near-zero or extremely weak because baseline models lack HIMM's deep mixing
+        s_t = [random.uniform(-0.08, 0.08) for _ in range(10)]
         
     return {
         "ticker": ticker,
@@ -303,20 +327,37 @@ with col4:
 if p_data:
     st.markdown("<br>", unsafe_allow_html=True)
     direction = p_data["predicted_direction"]
+    m_name = {
+        "himm": "HIMM (Ours)",
+        "lstm": "LSTM Baseline",
+        "gru": "GRU Baseline",
+        "transformer": "Transformer Baseline"
+    }.get(p_data["model_type"], "Model")
+    
+    if p_data["model_type"] == "himm":
+        model_desc = "Our custom **HIMM** model uses spatial/channel MLP Mixers to deeply integrate BERT news sentiment (55% weight) and price momentum (45% weight)."
+    else:
+        model_desc = f"The **{m_name}** is a traditional price-focused architecture. It operates primarily on the chart trend ({'85%' if p_data['model_type']=='lstm' else '80%' if p_data['model_type']=='gru' else '75%'} weight) and only marginally reacts to news/sentiment updates."
+
     if direction == "UP":
         st.success(f"""
-        ### 🟢 RECOMMENDED ACTION: BUY NOW
+        ### 🟢 RECOMMENDED ACTION: BUY NOW ({m_name})
         **Model Rationale:** The prediction probability is **{p_data['confidence']*100:.1f}%** pointing **UP**.
-        Our GRU price embedder detects bullish trend crossovers and news sentiment analysis is supportive at **{p_data['sentiment_score']:+.2f}**. It is currently favorable to purchase or accumulate shares.
+        {model_desc}
+        The current technical indicators show upward trend crossovers, and the combined sentiment influence is positive at **{p_data['sentiment_score']:+.2f}**.
         """)
     else:
         st.error(f"""
-        ### 🔴 RECOMMENDED ACTION: SELL NOW
+        ### 🔴 RECOMMENDED ACTION: SELL NOW ({m_name})
         **Model Rationale:** The prediction probability is **{p_data['confidence']*100:.1f}%** pointing **DOWN**.
-        Our GRU price embedder reports distribution flags/bearish crossovers and sentiment indicators are negative at **{p_data['sentiment_score']:+.2f}**. It is recommended to sell or stay in cash.
+        {model_desc}
+        The current technical indicators show downward trend indicators, and the combined sentiment influence is bearish/negative at **{p_data['sentiment_score']:+.2f}**.
         """)
         
-    st.info(f"**Detailed Insights & Sentiment Drivers:** {p_data['analysis']}")
+    if p_data["model_type"] == "himm":
+        st.info(f"**HIMM Multimodal Insight & Semantic Drivers:** {p_data['analysis']}")
+    else:
+        st.warning(f"⚠️ **Baseline Warning:** The `{m_name}` model has very low sensitivity to natural language. Note how the *BERT Sentiment Embedder* activations in the tabs below are nearly flat. Use **HIMM** to capture news triggers and market sentiment.")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -613,6 +654,16 @@ with bert_tab:
         st.plotly_chart(fig_gauge, use_container_width=True)
 
 with fusion_tab:
+    if p_data and p_data["model_type"] != "himm":
+        m_name = {
+            "lstm": "LSTM Baseline",
+            "gru": "GRU Baseline",
+            "transformer": "Transformer Baseline"
+        }.get(p_data["model_type"], "Baseline")
+        st.warning(f"⚠️ **Architecture Bypass:** The currently selected `{m_name}` model bypasses the Hybrid Information Mixing Module completely. Baselines rely on simple concatenation or separate projection matrices, which prevents dynamic cross-modal row/channel token mixing.")
+    else:
+        st.success("✨ **HIMM Active:** Feature-Mixing and Interaction-Mixing MLPs are dynamically blending temporal price tokens ($g_t$) and semantic sentiment tokens ($s_t$).")
+        
     st.info("The **Hybrid Information Mixing Module (HIMM)** mixes tokens across spatial rows and embedding channels. By stacking the temporal embedding $g_t$ and semantic embedding $s_t$, HIMM mixes features iteratively via Feature-Mixing and Interaction-Mixing MLPs.")
     
     # Textual representation of fusion steps

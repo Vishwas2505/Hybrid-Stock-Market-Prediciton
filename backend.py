@@ -421,8 +421,8 @@ def analyze_sentiment_with_gemini(api_key, ticker, news_list):
 
 def analyze_sentiment_local(ticker, news_list):
     """Fallback local keyword-based sentiment analyzer"""
-    positive_words = {"buy", "growth", "profit", "surpass", "upbeat", "expand", "record", "highest", "outperform", "upgrade", "gain", "bullish", "rise", "rises", "soar", "positive"}
-    negative_words = {"drop", "loss", "decline", "miss", "bearish", "fall", "falls", "plunge", "regulatory", "scrutiny", "sell", "debt", "shrink", "slump", "negative", "down", "investigate"}
+    positive_words = {"buy", "growth", "profit", "surpass", "upbeat", "expand", "record", "highest", "outperform", "upgrade", "gain", "bullish", "rise", "rises", "soar", "positive", "breakthrough", "success", "innovative", "surge", "surges", "win", "beat", "exceeds", "exceed", "bull", "strong", "outperforming"}
+    negative_words = {"drop", "loss", "decline", "miss", "bearish", "fall", "falls", "plunge", "regulatory", "scrutiny", "sell", "debt", "shrink", "slump", "negative", "down", "investigate", "bankruptcy", "plummet", "layoff", "layoffs", "crash", "crashes", "fail", "failed", "scam", "lawsuit", "suit", "warning", "weak", "plummets", "dropped", "losses"}
     
     score = 0.0
     for item in news_list:
